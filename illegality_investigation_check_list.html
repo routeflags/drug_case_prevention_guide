@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>違法捜査チェックリスト（対話式）— 印刷・保存可</title>
+<style>
+  :root {
+    --fg:#111; --muted:#555; --bg:#fff; --acc:#1b73e8;
+    --border:#ddd;
+  }
+  html,body{background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",sans-serif;line-height:1.6;margin:0}
+  header{padding:24px 20px;border-bottom:1px solid var(--border);background:#fafafa}
+  h1{margin:0 0 6px;font-size:1.6rem}
+  .sub{color:var(--muted);font-size:.95rem}
+  main{max-width:900px;margin:0 auto;padding:20px}
+  section{border:1px solid var(--border);border-radius:10px;padding:18px;margin:18px 0}
+  h2{font-size:1.2rem;margin:.2rem 0 1rem}
+  h3{font-size:1.05rem;margin:1rem 0 .5rem}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .q{padding:12px;border:1px solid var(--border);border-radius:8px}
+  label{display:block;margin:6px 0}
+  input[type="text"],input[type="datetime-local"],input[type="number"],textarea,select{width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:1rem}
+  textarea{min-height:80px}
+  .hint{color:var(--muted);font-size:.9rem}
+  .pill{display:inline-block;padding:.2rem .55rem;border-radius:999px;border:1px solid var(--border);margin:0 .25rem .25rem 0}
+  .btn{appearance:none;border:1px solid var(--border);padding:.7rem 1rem;border-radius:10px;background:#fff;cursor:pointer;font-size:1rem}
+  .btn.primary{border-color:var(--acc);background:var(--acc);color:#fff}
+  .btnbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .muted{color:var(--muted)}
+  #summary{border-left:4px solid var(--acc);background:#f6f9ff}
+  .score{font-weight:700}
+  .badge{display:inline-block;font-size:.85rem;padding:.15rem .45rem;border-radius:6px;border:1px solid var(--border);margin-left:.5rem}
+  .high{background:#ffecec;border-color:#ffb1b1}
+  .mid{background:#fff7e6;border-color:#ffd699}
+  .low{background:#eaffee;border-color:#b7f1c6}
+  .flex{display:flex;gap:8px;flex-wrap:wrap}
+  .footer{color:var(--muted);font-size:.9rem}
+  @media print{
+    header,.btnbar{display:none}
+    body{background:#fff}
+    section{break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>違法捜査チェックリスト（対話式）</h1>
+  <div class="sub">その場で状況を整理して、<strong>弁護士相談用の要約</strong>をワンクリック生成。ブラウザの<strong>印刷→PDF保存</strong>で記録できます。<br>※本ツールは一般情報です。個別の法的助言ではありません。</div>
+</header>
+
+<main>
+  <section>
+    <h2>0. 基本情報</h2>
+    <div class="grid">
+      <div class="q">
+        <label>日時（分かる範囲で）
+          <input type="datetime-local" id="dt">
+        </label>
+        <label>場所（通り/駅/自宅など）
+          <input type="text" id="place" placeholder="例：〇〇駅前、帰宅途中の路上、自宅リビング">
+        </label>
+        <label>関与者
+          <input type="text" id="actors" placeholder="警察官の人数/氏名・所属（分かれば）/同席者など">
+        </label>
+      </div>
+      <div class="q">
+        <label>連絡先（弁護士/家族）
+          <input type="text" id="contacts" placeholder="例：〇〇弁護士 03-xxxx-xxxx、家族 090-xxxx-xxxx">
+        </label>
+        <label>記録の有無
+          <select id="recording">
+            <option value="">選択</option>
+            <option>録音あり</option>
+            <option>録画あり</option>
+            <option>メモのみ</option>
+            <option>記録なし</option>
+          </select>
+        </label>
+        <div class="hint">※可能ならスマホのボイスメモ等で事後記録</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>1. シナリオを選択（複数可）</h2>
+    <div class="flex">
+      <label class="pill"><input type="checkbox" class="sc" value="stop" onchange="toggle()"> 職務質問・所持品検査</label>
+      <label class="pill"><input type="checkbox" class="sc" value="home" onchange="toggle()"> 家宅捜索（住居）</label>
+      <label class="pill"><input type="checkbox" class="sc" value="urine" onchange="toggle()"> 採尿・尿検査</label>
+      <label class="pill"><input type="checkbox" class="sc" value="phone" onchange="toggle()"> 端末解析（スマホ・PC）</label>
+      <label class="pill"><input type="checkbox" class="sc" value="car" onchange="toggle()"> 車両の捜索</label>
+      <label class="pill"><input type="checkbox" class="sc" value="invite" onchange="toggle()"> 任意同行・聴取</label>
+    </div>
+  </section>
+
+  <section id="sec-stop" style="display:none">
+    <h2>2-A. 職務質問・所持品検査</h2>
+    <div class="grid">
+      <div class="q">
+        <label>職務質問の理由を説明された？
+          <select id="stop-reason">
+            <option value="">選択</option><option>具体的に説明された</option><option>曖昧だった/説明なし</option>
+          </select>
+        </label>
+        <label>所持品検査の対応
+          <select id="stop-consent">
+            <option value="">選択</option><option>同意して開けた</option><option>拒否したが強制された</option><option>拒否したら諦めた</option>
+          </select>
+        </label>
+        <label>所要時間（分）<input type="number" id="stop-min" min="0" step="1"></label>
+      </div>
+      <div class="q">
+        <label>身体・荷物への接触
+          <select id="stop-touch">
+            <option value="">選択</option><option>触れられていない</option><option>触れられた（同意の有無は不明）</option><option>押さえつけられた/囲まれた</option>
+          </select>
+        </label>
+        <label>周囲状況
+          <select id="stop-env">
+            <option value="">選択</option><option>人通り多い/開放的</option><option>深夜/人気が少ない</option><option>複数警察官に囲まれ退路なし</option>
+          </select>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <section id="sec-home" style="display:none">
+    <h2>2-B. 家宅捜索（住居）</h2>
+    <div class="grid">
+      <div class="q">
+        <label>令状の提示
+          <select id="home-warrant">
+            <option value="">選択</option><option>原本提示あり</option><option>写しのみ/一部閲覧</option><option>提示なし</option>
+          </select>
+        </label>
+        <label>同意の有無
+          <select id="home-consent">
+            <option value="">選択</option><option>署名等で同意した</option><option>同意拒否した</option><option>同意不明（事実上強制）</option>
+          </select>
+        </label>
+      </div>
+      <div class="q">
+        <label>立会人・差押目録
+          <select id="home-proc">
+            <option value="">選択</option><option>立会/目録あり</option><option>目録のみ/記載不備</option><option>どちらも不明/なし</option>
+          </select>
+        </label>
+        <label>押収物メモ<textarea id="home-items" placeholder="押収物の名称・数量・場所など"></textarea></label>
+      </div>
+    </div>
+  </section>
+
+  <section id="sec-urine" style="display:none">
+    <h2>2-C. 採尿・尿検査</h2>
+    <div class="grid">
+      <div class="q">
+        <label>令状または同意
+          <select id="urine-auth">
+            <option value="">選択</option><option>令状あり</option><option>同意書に署名</option><option>強制的に採尿された</option>
+          </select>
+        </label>
+        <label>採尿手続
+          <select id="urine-proc">
+            <option value="">選択</option><option>同姓立会/プライバシー配慮あり</option><option>配慮不十分/第三者不在</option>
+          </select>
+        </label>
+      </div>
+      <div class="q">
+        <label>結果説明・再検査
+          <select id="urine-info">
+            <option value="">選択</option><option>結果説明あり/再検案内あり</option><option>説明不十分/書面なし</option>
+          </select>
+        </label>
+        <label>メモ<textarea id="urine-notes" placeholder="採尿容器の封印、連鎖管理（Chain of Custody）など"></textarea></label>
+      </div>
+    </div>
+  </section>
+
+  <section id="sec-phone" style="display:none">
+    <h2>2-D. 端末解析（スマホ・PC）</h2>
+    <div class="grid">
+      <div class="q">
+        <label>ロック解除への要請
+          <select id="phone-unlock">
+            <option value="">選択</option><option>任意で解除した</option><option>解除を拒否した</option><option>解除を強要された/生体認証を使われた</option>
+          </select>
+        </label>
+        <label>令状の有無
+          <select id="phone-warrant">
+            <option value="">選択</option><option>令状あり</option><option>令状なし</option><option>不明</option>
+          </select>
+        </label>
+      </div>
+      <div class="q">
+        <label>コピーの範囲
+          <select id="phone-scope">
+            <option value="">選択</option><option>日時やアプリを限定</option><option>端末全体のコピー</option><option>不明</option>
+          </select>
+        </label>
+        <label>メモ<textarea id="phone-notes" placeholder="押収・還付の日時、解析の立会可否など"></textarea></label>
+      </div>
+    </div>
+  </section>
+
+  <section id="sec-car" style="display:none">
+    <h2>2-E. 車両の捜索</h2>
+    <div class="grid">
+      <div class="q">
+        <label>中止の自由
+          <select id="car-consent">
+            <option value="">選択</option><option>任意/いつでも中止可と言われた</option><option>中止不可の雰囲気（事実上強制）</option>
+          </select>
+        </label>
+        <label>理由の具体性
+          <select id="car-reason">
+            <option value="">選択</option><option>具体的事由を提示</option><option>曖昧/類型的な説明のみ</option>
+          </select>
+        </label>
+      </div>
+      <div class="q">
+        <label>範囲の限定
+          <select id="car-scope">
+            <option value="">選択</option><option>限定（トランクのみ等）</option><option>無限定に広範囲</option>
+          </select>
+        </label>
+        <label>メモ<textarea id="car-notes" placeholder="立会人の有無、録音、押収品など"></textarea></label>
+      </div>
+    </div>
+  </section>
+
+  <section id="sec-invite" style="display:none">
+    <h2>2-F. 任意同行・聴取</h2>
+    <div class="grid">
+      <div class="q">
+        <label>任意同行の告知
+          <select id="inv-vol">
+            <option value="">選択</option><option>任意で帰れると明示</option><option>帰れない雰囲気/事実上強制</option>
+          </select>
+        </label>
+        <label>供述調書
+          <select id="inv-stmt">
+            <option value="">選択</option><option>内容確認/訂正が十分にできた</option><option>急かされ/十分に読めなかった</option>
+          </select>
+        </label>
+      </div>
+      <div class="q">
+        <label>滞在時間（時間）<input type="number" id="inv-hours" min="0" step="0.5"></label>
+        <label>メモ<textarea id="inv-notes" placeholder="休憩や連絡の可否、夜間帯の長時間化など"></textarea></label>
+      </div>
+    </div>
+  </section>
+
+  <section id="summary">
+    <h2>3. 要約とリスク度</h2>
+    <p>入力に基づき、留意点を自動抽出します。<span class="muted">※あくまで目安。必ず弁護士に相談してください。</span></p>
+    <div id="scoreline" class="muted">まだ回答が不足しています。</div>
+    <div id="flags"></div>
+    <div id="rec"></div>
+    <div class="btnbar">
+      <button class="btn primary" onclick="analyze()">要約を更新</button>
+      <button class="btn" onclick="window.print()">印刷 / PDFに保存</button>
+      <button class="btn" onclick="resetAll()">リセット</button>
+    </div>
+  </section>
+
+  <section class="footer">
+    <strong>免責：</strong>本ツールは教育目的の一般情報です。個別の案件については、事情により結論が異なります。必ず弁護士に相談してください。<br>
+    <strong>プライバシー：</strong>入力は端末内のみで処理され、送信されません。
+  </section>
+</main>
+
+<script>
+function qs(id){return document.getElementById(id)}
+function visible(id, show){qs(id).style.display = show ? '' : 'none'}
+function toggle(){
+  const map = {stop:'sec-stop',home:'sec-home',urine:'sec-urine',phone:'sec-phone',car:'sec-car',invite:'sec-invite'}
+  const chosen = Array.from(document.querySelectorAll('.sc:checked')).map(x=>x.value)
+  Object.entries(map).forEach(([k,v])=>visible(v, chosen.includes(k)))
+}
+function scoreFlag(cond, label){ return cond ? label : null }
+function analyze(){
+  const flags = []
+  const get = id => qs(id)?.value || ''
+  // Basic context
+  const ctx = {
+    dt:get('dt'), place:get('place'), actors:get('actors'),
+    contacts:get('contacts'), recording:get('recording')
+  }
+  if(ctx.recording==='記録なし') flags.push('記録なし（事後メモ推奨）')
+  // Stop & frisk
+  if(qs('sec-stop').style.display!=='none'){
+    flags.push(scoreFlag(get('stop-reason').includes('曖昧'), '職務質問の理由が不明確'))
+    flags.push(scoreFlag(get('stop-consent').includes('強制'), '所持品検査が事実上の強制'))
+    flags.push(scoreFlag(+get('stop-min')>30, '長時間の停止（30分超）'))
+    flags.push(scoreFlag(get('stop-touch').includes('押さえ'), '身体拘束の可能性'))
+    flags.push(scoreFlag(get('stop-env').includes('囲まれ'), '退路遮断（任意性に疑義）'))
+  }
+  // Home search
+  if(qs('sec-home').style.display!=='none'){
+    flags.push(scoreFlag(get('home-warrant').includes('なし'), '令状提示なし'))
+    flags.push(scoreFlag(get('home-consent').includes('不明')||get('home-consent').includes('拒否'), '同意なし/不明の家宅捜索'))
+    flags.push(scoreFlag(get('home-proc').includes('不明')||get('home-proc').includes('なし'), '立会/差押目録に不備'))
+  }
+  // Urine
+  if(qs('sec-urine').style.display!=='none'){
+    flags.push(scoreFlag(get('urine-auth').includes('強制'), '令状・同意なしの採尿/強制の疑い'))
+    flags.push(scoreFlag(get('urine-proc').includes('不十分'), 'プライバシー配慮・同姓立会に不備'))
+    flags.push(scoreFlag(get('urine-info').includes('不十分'), '結果説明・再検案内が不十分'))
+  }
+  // Phone
+  if(qs('sec-phone').style.display!=='none'){
+    flags.push(scoreFlag(get('phone-warrant').includes('なし')||get('phone-warrant').includes('不明'), '令状なし/不明での端末解析'))
+    flags.push(scoreFlag(get('phone-unlock').includes('強要'), 'ロック解除の強要（任意性に疑義）'))
+    flags.push(scoreFlag(get('phone-scope').includes('全体'), '解析範囲が無限定'))
+  }
+  // Car
+  if(qs('sec-car').style.display!=='none'){
+    flags.push(scoreFlag(get('car-consent').includes('強制'), '車両捜索が事実上の強制'))
+    flags.push(scoreFlag(get('car-reason').includes('曖昧'), '捜索理由が曖昧'))
+    flags.push(scoreFlag(get('car-scope').includes('無限定'), '捜索範囲が無限定'))
+  }
+  // Invite
+  if(qs('sec-invite').style.display!=='none'){
+    flags.push(scoreFlag(get('inv-vol').includes('強制'), '任意同行が事実上の強制'))
+    flags.push(scoreFlag(get('inv-stmt').includes('読めなかった'), '供述調書の確認・訂正が不十分'))
+    flags.push(scoreFlag(+get('inv-hours')>6, '長時間の聴取（6時間超）'))
+  }
+
+  const cleanFlags = flags.filter(Boolean)
+  const risk = (function(){
+    const highKeys = ['令状提示なし','強制','身体拘束','長時間','退路遮断','事実上の強制']
+    const high = cleanFlags.filter(f=>highKeys.some(k=>f.includes(k))).length
+    const mid = cleanFlags.length - high
+    if(high>=2) return {lvl:'高', cls:'high', msg:'弁護士へ至急相談を。詳細記録と受任の打診を推奨。'}
+    if(high===1 || mid>=2) return {lvl:'中', cls:'mid', msg:'弁護士相談を推奨。記録の補完と事実関係の整理を。'}
+    return {lvl:'低', cls:'low', msg:'記録を保全しつつ、必要に応じて相談を検討。'}
+  })()
+
+  const scoreline = `リスク度：<span class="score ${risk.cls} badge">【${risk.lvl}】</span>　${risk.msg}`
+  qs('scoreline').innerHTML = scoreline
+
+  // Flags list
+  const ul = document.createElement('ul')
+  cleanFlags.forEach(f=>{
+    const li = document.createElement('li'); li.textContent = f; ul.appendChild(li)
+  })
+  const flagsDiv = qs('flags'); flagsDiv.innerHTML=''
+  if(cleanFlags.length){ flagsDiv.appendChild(ul) } else { flagsDiv.innerHTML='<span class="muted">特記事項は抽出されていません。</span>' }
+
+  // Recommendation text
+  const rec = qs('rec')
+  const ctxline = [ctx.dt&&`日時:${ctx.dt}`, ctx.place&&`場所:${ctx.place}`, ctx.actors&&`関与:${ctx.actors}`, ctx.recording&&`記録:${ctx.recording}`].filter(Boolean).join(' / ')
+  rec.innerHTML = `<h3>相談用要約</h3>
+  <p>${ctxline||'（基本情報の入力推奨）'}</p>
+  <p>弁護士に伝えるポイント：<br>
+  ・どの手続が行われたか（選択シナリオ）<br>
+  ・令状の有無／同意の有無／強制の有無<br>
+  ・録音・録画や第三者の立会の有無<br>
+  ・押収物の目録・返還の状況<br>
+  ・体調・服薬・長時間化の有無</p>`
+}
+function resetAll(){ location.reload() }
+</script>
+</body>
+</html>
